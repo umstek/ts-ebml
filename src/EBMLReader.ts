@@ -169,11 +169,11 @@ export default class EBMLReader extends EventEmitter {
       this.segmentOffset = elm.dataStart;
       this.emit("segment_offset", this.segmentOffset);
     }else if(elm.type === "b" && elm.name === "SimpleBlock"){
-      const {timecode: timestamp, trackNumber, frames} = tools.ebmlBlock(elm.data);
+      const {timecode: timestamp, trackNumber, frames, keyframe} = tools.ebmlBlock(elm.data);
       if(this.trackTypes[trackNumber] === 1){ // trackType === 1 => video track
         if(!this.firstVideoBlockRead){
           this.firstVideoBlockRead = true;
-          if(this.trackInfo.type === "both" || this.trackInfo.type === "video"){
+          if((this.trackInfo.type === "both" || this.trackInfo.type === "video") && keyframe){
             const CueTime = this.lastClusterTimestamp + timestamp;
             this.cues.push({CueTrack: trackNumber, CueClusterPosition: this.lastClusterPosition, CueTime});
             this.emit("cue_info", {
