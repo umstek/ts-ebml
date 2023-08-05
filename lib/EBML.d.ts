@@ -1,20 +1,20 @@
 /// <reference types="node" />
 import { Buffer } from "./tools";
-export declare type ChildElementsValue = NumberElement | StringElement | BinaryElement | DateElement;
-export declare type EBMLElementValue = MasterElement | ChildElementsValue;
-export declare type ChildElementBuffer = ChildElement & {
+export type ChildElementsValue = NumberElement | StringElement | BinaryElement | DateElement;
+export type EBMLElementValue = MasterElement | ChildElementsValue;
+export type ChildElementBuffer = ChildElement & {
     data: Buffer;
 };
-export declare type EBMLElementBuffer = MasterElement | ChildElementBuffer;
-export declare type EBMLElementBufferValue = MasterElement | (ChildElementsValue & {
+export type EBMLElementBuffer = MasterElement | ChildElementBuffer;
+export type EBMLElementBufferValue = MasterElement | (ChildElementsValue & {
     data: Buffer;
 });
-export declare type EBMLElementDetail = (MasterElement | (ChildElementsValue & {
+export type EBMLElementDetail = (MasterElement | (ChildElementsValue & {
     data: Buffer;
 })) & ElementDetail;
 export interface IElement {
     name: string;
-    type: "m" | "u" | "i" | "f" | "s" | "8" | "b" | "d";
+    type: "m" | "u" | "i" | "f" | "s" | "8" | "b" | "d" | "unknown";
 }
 export interface ChildElement extends IElement {
     type: "u" | "i" | "f" | "s" | "8" | "b" | "d";
@@ -23,6 +23,9 @@ export interface MasterElement extends IElement {
     type: "m";
     isEnd: boolean;
     unknownSize?: boolean;
+}
+export interface UnknownElement extends IElement {
+    type: "unknown";
 }
 export interface ChildElementValue extends ChildElement {
     value: any;

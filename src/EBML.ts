@@ -8,7 +8,7 @@ export type EBMLElementDetail = (MasterElement | (ChildElementsValue & {data: Bu
 
 export interface IElement {
   name: string;
-  type: "m"|"u"|"i"|"f"|"s"|"8"|"b"|"d";
+  type: "m"|"u"|"i"|"f"|"s"|"8"|"b"|"d"|"unknown";
 }
 
 export interface ChildElement extends IElement {
@@ -19,6 +19,10 @@ export interface MasterElement extends IElement {
   type: "m";
   isEnd: boolean;
   unknownSize?: boolean;
+}
+
+export interface UnknownElement extends IElement {
+  type: "unknown";  
 }
 
 export interface ChildElementValue extends ChildElement {

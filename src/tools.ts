@@ -2,10 +2,9 @@
 import {Int64BE, Uint64BE} from "int64-buffer";
 import * as EBML from "./EBML";
 import Encoder from "./EBMLEncoder";
-import Decoder from "./EBMLDecoder";
 import { Buffer } from "buffer";
 import { tools as _tools } from "ebml";
-import _block = require("ebml-block");
+import * as _block from "ebml-block";
 
 export { Buffer } from "buffer";
 
