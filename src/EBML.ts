@@ -1,4 +1,3 @@
-import type { Buffer } from "./tools";
 export type ChildElementsValue =
 	| NumberElement
 	| StringElement

@@ -104,7 +104,7 @@ export default class EBMLDecoder {
 
 		const schema = this.getSchemaInfo(tagNum);
 
-		const tagObj: EBML.EBMLElementDetail = <any>{
+		const tagObj: EBML.EBMLElementDetail = {
 			EBML_ID: tagNum.toString(16),
 			schema,
 			type: schema.type,
@@ -118,7 +118,7 @@ export default class EBMLDecoder {
 			dataEnd: null,
 			dataSize: null,
 			data: null,
-		};
+		} as any;
 		// | tag: vint | size: vint | data: Buffer(size) |
 
 		this._tag_stack.push(tagObj);

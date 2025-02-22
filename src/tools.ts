@@ -344,7 +344,8 @@ export function makeMetadataSeekable(
 			//console.error(`CueClusterPosition: ${CueClusterPosition}, Corrected to: ${CueClusterPosition - segmentContentStartPos}  , offset by ${sizeDifference} to become ${(CueClusterPosition - segmentContentStartPos) + sizeDifference - segmentContentStartPos}`);
 			// EBMLReader returns CueClusterPosition with absolute byte offsets. The Cues section expects them as offsets from the first level 1 element of the Segment, so we need to adjust it.
 			// EBMLReader returns CueClusterPosition with absolute byte offsets. The Cues section expects them as offsets from the first level 1 element of the Segment, so we need to adjust it.
-			let CueClusterPositionCorrected = CueClusterPosition - segmentContentStartPos;
+			let CueClusterPositionCorrected =
+				CueClusterPosition - segmentContentStartPos;
 			// We also need to adjust to take into account the change in metadata size from when EBMLReader read the original metadata.
 			CueClusterPositionCorrected += sizeDifference;
 			cues.push({
@@ -401,15 +402,13 @@ export function makeMetadataSeekable(
  * @param metadata - array of EBML elements to print
  */
 export function printElementIds(metadata: EBML.EBMLElementBuffer[]) {
+	const result: EBML.EBMLElementBuffer[] = [];
+	const start = -1;
 
-  let result: EBML.EBMLElementBuffer[] = [];
-  let start: number = -1;
-
-  for (let i = 0; i < metadata.length; i++) {
-    console.error("\t id: " + metadata[i].name);
-  }
+	for (let i = 0; i < metadata.length; i++) {
+		console.error(`\t id: ${metadata[i].name}`);
+	}
 }
-
 
 /**
  * remove all occurances of an EBML element from an array of elements
