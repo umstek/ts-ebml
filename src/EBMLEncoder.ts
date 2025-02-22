@@ -40,7 +40,7 @@ export default class EBMLEncoder {
 				this.endTag(elm);
 			}
 		} else {
-			// ensure that we are working with an internal `Buffer` instance
+			// Ensure that we are working with an internal `Buffer` instance
 			elm.data = Buffer.from(elm.data);
 			this.writeTag(elm);
 		}
@@ -76,7 +76,7 @@ export default class EBMLEncoder {
 
 		const data = tools.encodeTag(tagId, tagData);
 		/**
-		 * 親要素が閉じタグあり(isEnd)なら閉じタグが来るまで待つ(children queに入る)
+		 * If the parent element has a closing tag (isEnd), wait until the closing tag comes (enter the children queue)
 		 */
 		if (this._stack.length > 0) {
 			const last = this._stack[this._stack.length - 1];
@@ -100,7 +100,7 @@ export default class EBMLEncoder {
 		}
 
 		/**
-		 * 閉じタグ不定長の場合はスタックに積まずに即時バッファに書き込む
+		 * If the closing tag has an indefinite length, write it to the buffer immediately without stacking it.
 		 */
 		if (elm.unknownSize) {
 			const data = tools.encodeTag(tagId, new Buffer(0), elm.unknownSize);

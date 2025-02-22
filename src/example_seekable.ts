@@ -102,9 +102,9 @@ async function main_from_recorder(duration: number, codec: string) {
 		const task = async () => {
 			const buf = await readAsArrayBuffer(chunk);
 			const elms = decoder.decode(buf);
-			elms.forEach((elm) => {
+			for (const elm of elms) {
 				reader.read(elm);
-			});
+			}
 		};
 		tasks = tasks.then(() => task());
 	};
@@ -176,7 +176,9 @@ async function main_from_recorder(duration: number, codec: string) {
 		const _reader = new Reader();
 		_reader.logging = true;
 		_reader.logGroup = info.title;
-		new Decoder().decode(refinedBuf).forEach((elm) => _reader.read(elm));
+		for (const elm of new Decoder().decode(refinedBuf)) {
+			_reader.read(elm);
+		}
 		_reader.stop();
 
 		const refined_video = document.createElement("video");

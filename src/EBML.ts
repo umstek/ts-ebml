@@ -72,11 +72,11 @@ export interface ElementDetail {
 	 */
 	level: number;
 	/**
-	 * このタグのバッファ全体における開始オフセット位置
+	 * The starting offset position of this tag within the entire buffer
 	 */
 	tagStart: number;
 	/**
-	 * このタグのバッファ全体における終了オフセット位置
+	 * The ending offset position of this tag within the entire buffer
 	 */
 	tagEnd: number;
 	/**
@@ -88,11 +88,11 @@ export interface ElementDetail {
 	 */
 	sizeEnd: number;
 	/**
-	 * 要素の中身の開始位置
+	 * The starting position of the element's content
 	 */
 	dataStart: number;
 	/**
-	 * 要素の中身の終了位置
+	 * The ending position of the element's content
 	 */
 	dataEnd: number;
 	/**

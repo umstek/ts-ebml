@@ -18,11 +18,11 @@ export default class EBMLDecoder {
 	private _tag_stack: EBML.EBMLElementDetail[];
 	private _state: State;
 	/**
-	 * _buffer の先頭からの位置
+	 * position from the top of _buffer
 	 */
 	private _cursor: number;
 	/**
-	 * 全体におけるポインタ
+	 * pointer in the whole
 	 */
 	private _total: number;
 	private _schema: { [key: number]: EBML.Schema };
@@ -46,7 +46,7 @@ export default class EBMLDecoder {
 	}
 
 	private readChunk(chunk: ArrayBuffer): void {
-		// 読みかけの(読めなかった) this._buffer と 新しい chunk を合わせて読み直す
+		// Read again with the unread this._buffer and the new chunk
 		this._buffer = tools.concat([this._buffer, new Buffer(chunk)]);
 		while (this._cursor < this._buffer.length) {
 			// console.log(this._cursor, this._total, this._tag_stack);
@@ -74,11 +74,11 @@ export default class EBMLDecoder {
 	}
 
 	/**
-	 * vint された parsing tag
+	 * parsing tag encoded in vint
 	 * @return - return false when waiting for more data
 	 */
 	private readTag(): boolean {
-		// tag.length が buffer の外にある
+		// tag.length is outside the buffer
 		if (this._cursor >= this._buffer.length) {
 			return false;
 		}
@@ -86,16 +86,16 @@ export default class EBMLDecoder {
 		// read ebml id vint without first byte
 		const tag = readVint(this._buffer, this._cursor);
 
-		// tag が読めなかった
+		// tag could not be read
 		if (tag == null) {
 			return false;
 		}
 
 		// >>>>>>>>>
-		// tag 識別子
+		// tag identifier
 		//const tagStr = this._buffer.toString("hex", this._cursor, this._cursor + tag.length);
 		//const tagNum = parseInt(tagStr, 16);
-		// 上と等価
+		// equivalent to the above
 		const buf = this._buffer.slice(this._cursor, this._cursor + tag.length);
 		const tagNum = buf.reduce(
 			(o, v, i, arr) => o + v * 16 ** (2 * (arr.length - 1 - i)),
@@ -124,22 +124,22 @@ export default class EBMLDecoder {
 		this._tag_stack.push(tagObj);
 		// <<<<<<<<
 
-		// ポインタを進める
+		// advance the pointer
 		this._cursor += tag.length;
 		this._total += tag.length;
 
-		// 読み込み状態変更
+		// change the reading state
 		this._state = State.STATE_SIZE;
 
 		return true;
 	}
 
 	/**
-	 * vint された現在のタグの内容の大きさを読み込む
+	 * Read the size of the current tag's contents encoded in vint
 	 * @return - return false when waiting for more data
 	 */
 	private readSize(): boolean {
-		// tag.length が buffer の外にある
+		// tag.length is outside the buffer
 		if (this._cursor >= this._buffer.length) {
 			return false;
 		}
@@ -147,13 +147,13 @@ export default class EBMLDecoder {
 		// read ebml datasize vint without first byte
 		const size = readVint(this._buffer, this._cursor);
 
-		// まだ読めない
+		// still can't read
 		if (size == null) {
 			return false;
 		}
 
 		// >>>>>>>>>
-		// current tag の data size 決定
+		// determine the data size of the current tag
 		const tagObj = this._tag_stack[this._tag_stack.length - 1];
 
 		tagObj.sizeEnd = tagObj.sizeStart + size.length;
@@ -174,7 +174,7 @@ export default class EBMLDecoder {
 
 		// <<<<<<<<
 
-		// ポインタを進める
+		// advance the pointer
 		this._cursor += size.length;
 		this._total += size.length;
 
@@ -184,23 +184,23 @@ export default class EBMLDecoder {
 	}
 
 	/**
-	 * データ読み込み
+	 * data reading
 	 */
 	private readContent(): boolean {
 		const tagObj = this._tag_stack[this._tag_stack.length - 1];
 
-		// master element は子要素を持つので生データはない
+		// master element has child elements, so there is no raw data
 		if (tagObj.type === "m") {
 			// console.log('content should be tags');
 			tagObj.isEnd = false;
 			this._result.push(tagObj);
 			this._state = State.STATE_TAG;
-			// この Mastert Element は空要素か
+			// Is this Master Element an empty element?
 			if (tagObj.dataSize === 0) {
-				// 即座に終了タグを追加
+				// Add the end tag immediately
 				const elm = Object.assign({}, tagObj, { isEnd: true });
 				this._result.push(elm);
-				this._tag_stack.pop(); // スタックからこのタグを捨てる
+				this._tag_stack.pop(); // discard this tag from the stack
 			}
 			return true;
 		}
@@ -210,13 +210,13 @@ export default class EBMLDecoder {
 			return false;
 		}
 
-		// タグの中身の生データ
+		// raw data inside the tag
 		const data = this._buffer.slice(
 			this._cursor,
 			this._cursor + tagObj.dataSize,
 		);
 
-		// 読み終わったバッファを捨てて読み込んでいる部分のバッファのみ残す
+		// Discard the read buffer and leave only the buffer being read
 		this._buffer = this._buffer.slice(this._cursor + tagObj.dataSize);
 
 		tagObj.data = data;
@@ -271,26 +271,26 @@ export default class EBMLDecoder {
 
 		// <<<<<<<<
 
-		// ポインタを進める
+		// advance the pointer
 		this._total += tagObj.dataSize;
 
-		// タグ待ちモードに変更
+		// Change to tag waiting mode
 		this._state = State.STATE_TAG;
 		this._cursor = 0;
 		this._tag_stack.pop(); // remove the object from the stack
 
 		while (this._tag_stack.length > 0) {
 			const topEle = this._tag_stack[this._tag_stack.length - 1];
-			// 親が不定長サイズなので閉じタグは期待できない
+			// Since the parent has an indefinite size, the closing tag cannot be expected
 			if (topEle.dataEnd < 0) {
-				this._tag_stack.pop(); // 親タグを捨てる
+				this._tag_stack.pop(); // discard the parent tag
 				return true;
 			}
-			// 閉じタグの来るべき場所まで来たかどうか
+			// Whether it has reached the place where the closing tag should come
 			if (this._total < topEle.dataEnd) {
 				break;
 			}
-			// 閉じタグを挿入すべきタイミングが来た
+			// The timing to insert the closing tag has come
 			if (topEle.type !== "m") {
 				throw new Error("parent element is not master element");
 			}

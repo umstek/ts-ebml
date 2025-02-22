@@ -5,7 +5,7 @@ import * as tools from "./tools";
 /**
  * This is an informal code for reference.
  * EBMLReader is a class for getting information to enable seeking Webm recorded by MediaRecorder.
- * So please do not use for regular WebM files.
+ * So please do not use it for regular WebM files.
  */
 
 export default class EBMLReader extends EventEmitter {
@@ -42,7 +42,7 @@ export default class EBMLReader extends EventEmitter {
 		| { type: "video" | "audio" | "both"; trackNumber: number }
 		| { type: "nothing" };
 	/**
-	 * usefull for thumbnail creation.
+	 * useful for thumbnail creation.
 	 */
 	use_webp: boolean;
 	use_duration_every_simpleblock: boolean; // heavy
@@ -50,7 +50,7 @@ export default class EBMLReader extends EventEmitter {
 	logGroup = "";
 	private hasLoggingStarted = false;
 	/**
-	 * usefull for recording chunks.
+	 * useful for recording chunks.
 	 */
 	use_segment_info: boolean;
 	/** see: https://bugs.chromium.org/p/chromium/issues/detail?id=606000#c22 */
@@ -158,13 +158,13 @@ export default class EBMLReader extends EventEmitter {
 			return;
 		}
 		if (elm.type === "m") {
-			// 閉じタグの自動挿入
+			// Automatic insertion of closing tag
 			if (elm.isEnd) {
 				this.stack.pop();
 			} else {
 				const parent = this.stack[this.stack.length - 1];
 				if (parent != null && parent.level >= elm.level) {
-					// 閉じタグなしでレベルが下がったら閉じタグを挿入
+					// Insert closing tag if level decreases without closing tag
 					this.stack.pop();
 
 					// From http://w3c.github.io/media-source/webm-byte-stream-format.html#webm-media-segments
@@ -263,7 +263,7 @@ export default class EBMLReader extends EventEmitter {
 					const startcode = frame.slice(3, 6).toString("hex");
 					if (startcode !== "9d012a") {
 						continue;
-					} // VP8 の場合
+					} // In the case of VP8
 					const webpBuf = tools.VP8BitStreamToRiffWebPBuffer(frame);
 					const webp = new Blob([webpBuf], { type: "image/webp" });
 					const currentTime = this.duration;
@@ -307,10 +307,10 @@ export default class EBMLReader extends EventEmitter {
 		} else if (elm.type === "u" && elm.name === "CodecDelay") {
 			this.currentTrack.CodecDelay = elm.value;
 		} else if (elm.type === "u" && elm.name === "DefaultDuration") {
-			// media source api は DefaultDuration を計算するとバグる。
+			// The media source api has a bug when calculating DefaultDuration.
 			// https://bugs.chromium.org/p/chromium/issues/detail?id=606000#c22
-			// chrome 58 ではこれを回避するために DefaultDuration 要素を抜き取った。
-			// chrome 58 以前でもこのタグを抜き取ることで回避できる
+			// In Chrome 58, this was avoided by extracting the DefaultDuration element.
+			// This can be avoided by extracting this tag even in Chrome 58 and earlier.
 			if (this.drop_default_duration) {
 				console.warn("DefaultDuration detected!, remove it");
 				drop = true;
@@ -331,8 +331,8 @@ export default class EBMLReader extends EventEmitter {
 		}
 	}
 	/**
-	 * DefaultDuration が定義されている場合は最後のフレームのdurationも考慮する
-	 * 単位 timecodeScale
+	 * Consider the duration of the last frame if DefaultDuration is defined
+	 * unit timecodeScale
 	 *
 	 * !!! if you need duration with seconds !!!
 	 * ```js
@@ -345,7 +345,7 @@ export default class EBMLReader extends EventEmitter {
 			console.warn("no video, no audio track");
 			return 0;
 		}
-		// defaultDuration は 生の nano sec
+		// defaultDuration is raw nano sec
 		let defaultDuration = 0;
 		// nanoseconds
 		let codecDelay = 0;
@@ -357,7 +357,7 @@ export default class EBMLReader extends EventEmitter {
 			defaultDuration = _defaultDuration;
 		} else {
 			// https://bugs.chromium.org/p/chromium/issues/detail?id=606000#c22
-			// default duration がないときに使う delta
+			// delta to use when there is no default duration
 			if (this.trackInfo.type === "both") {
 				if (
 					this.last2SimpleBlockAudioTrackTimecode[1] >

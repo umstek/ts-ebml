@@ -53,7 +53,7 @@ export function WebPFrameFilter(elms: EBML.EBMLElementDetail[]): Blob[] {
 }
 
 /**
- * WebP ファイルにできる SimpleBlock の パスフィルタ
+ * WebP SimpleBlock path filter
  */
 export function WebPBlockFilter(
 	elms: EBML.EBMLElementDetail[],
@@ -81,8 +81,8 @@ export function WebPBlockFilter(
 }
 
 /**
- * @param frame - VP8 BitStream のうち startcode をもつ frame
- * @return - WebP ファイルの ArrayBuffer
+ * @param frame - frame with startcode in VP8 BitStream
+ * @return - WebP file ArrayBuffer
  */
 export function VP8BitStreamToRiffWebPBuffer(frame: Buffer): Buffer {
 	const VP8Chunk = createRIFFChunk("VP8 ", frame);
@@ -91,7 +91,7 @@ export function VP8BitStreamToRiffWebPBuffer(frame: Buffer): Buffer {
 }
 
 /**
- * RIFF データチャンクを作る
+ * create RIFF data chunk
  */
 export function createRIFFChunk(FourCC: string, chunk: Buffer): Buffer {
 	const chunkSize = new Buffer(4);
@@ -343,13 +343,14 @@ export function makeMetadataSeekable(
 			});
 			//console.error(`CueClusterPosition: ${CueClusterPosition}, Corrected to: ${CueClusterPosition - segmentContentStartPos}  , offset by ${sizeDifference} to become ${(CueClusterPosition - segmentContentStartPos) + sizeDifference - segmentContentStartPos}`);
 			// EBMLReader returns CueClusterPosition with absolute byte offsets. The Cues section expects them as offsets from the first level 1 element of the Segment, so we need to adjust it.
-			CueClusterPosition -= segmentContentStartPos;
+			// EBMLReader returns CueClusterPosition with absolute byte offsets. The Cues section expects them as offsets from the first level 1 element of the Segment, so we need to adjust it.
+			let CueClusterPositionCorrected = CueClusterPosition - segmentContentStartPos;
 			// We also need to adjust to take into account the change in metadata size from when EBMLReader read the original metadata.
-			CueClusterPosition += sizeDifference;
+			CueClusterPositionCorrected += sizeDifference;
 			cues.push({
 				name: "CueClusterPosition",
 				type: "u",
-				data: createUIntBuffer(CueClusterPosition),
+				data: createUIntBuffer(CueClusterPositionCorrected),
 			});
 			cues.push({ name: "CueTrackPositions", type: "m", isEnd: true });
 			cues.push({ name: "CuePoint", type: "m", isEnd: true });
@@ -398,7 +399,7 @@ export function makeMetadataSeekable(
  * print all element id names in a list
 
  * @param metadata - array of EBML elements to print
- *
+ */
 export function printElementIds(metadata: EBML.EBMLElementBuffer[]) {
 
   let result: EBML.EBMLElementBuffer[] = [];
@@ -408,7 +409,7 @@ export function printElementIds(metadata: EBML.EBMLElementBuffer[]) {
     console.error("\t id: " + metadata[i].name);
   }
 }
-*/
+
 
 /**
  * remove all occurances of an EBML element from an array of elements
@@ -494,11 +495,11 @@ export function extractElement(
 
 /**
  * @deprecated
- * metadata に対して duration と seekhead を追加した metadata を返す
- * @param metadata - 変更前の webm における ファイル先頭から 最初の Cluster 要素までの 要素
+ * returns metadata with duration and seekhead added to metadata
+ * @param metadata - Element from the beginning of the file to the first Cluster element in the original webm
  * @param duration - Duration (TimecodeScale)
  * @param cues - cue points for clusters
- * @deprecated @param clusterPtrs - 変更前の webm における SeekHead に追加する Cluster 要素 への start pointer
+ * @deprecated @param clusterPtrs - start pointer to the Cluster element to be added to SeekHead in the original webm
  * @deprecated @param cueInfos - please use cues.
  */
 export function putRefinedMetaData(
@@ -557,7 +558,7 @@ export function putRefinedMetaData(
 	const segmentSize = payload[0].tagStart - ebmlSize;
 	const segmentOffset = payload[0].tagStart;
 	const segmentTagBuf = new Buffer([0x18, 0x53, 0x80, 0x67]); // Segment
-	const segmentSizeBuf = new Buffer("01ffffffffffffff", "hex"); // Segmentの最後の位置は無数の Cluster 依存なので。 writeVint(newPayloadSize).byteLength ではなく、 infinity.
+	const segmentSizeBuf = new Buffer("01ffffffffffffff", "hex"); // Since the last position of Segment depends on countless Clusters, it is not writeVint(newPayloadSize).byteLength, but infinity.
 	const _segmentSize = segmentTagBuf.byteLength + segmentSizeBuf.byteLength; // == segmentSize
 	let newPayloadSize = payloadSize;
 	// We need the size to be stable between two refinements in order for our offsets to be correct
@@ -568,7 +569,7 @@ export function putRefinedMetaData(
 		const offsetEndDiff = newPayloadOffsetEnd - originalPayloadOffsetEnd;
 		const sizeDiff = offsetDiff + offsetEndDiff;
 		const refined = refineMetadata(payload, sizeDiff, info);
-		const newNewRefinedSize = new Encoder().encode(refined).byteLength; // 一旦 seekhead を作って自身のサイズを調べる
+		const newNewRefinedSize = new Encoder().encode(refined).byteLength; // Create a seekhead once to check its size
 		if (newNewRefinedSize === newPayloadSize) {
 			// Size is stable
 			return new Encoder().encode(
@@ -605,7 +606,7 @@ function refineMetadata(
 	const { duration, clusterPtrs, cues } = info;
 	const _metadata: EBML.EBMLElementBuffer[] = mesetadata.slice(0);
 	if (typeof duration === "number") {
-		// duration を追加する
+		// add duration
 		let overwrited = false;
 		for (const elm of _metadata) {
 			if (elm.type === "f" && elm.name === "Duration") {
@@ -702,7 +703,7 @@ function create_seek_from_clusters(
 	const seeks: EBML.EBMLElementBuffer[] = [];
 	for (const start of clusterPtrs) {
 		seeks.push({ name: "Seek", type: "m", isEnd: false });
-		// [0x1F, 0x43, 0xB6, 0x75] で Cluster 意
+		// [0x1F, 0x43, 0xB6, 0x75] means Cluster
 		seeks.push({
 			name: "SeekID",
 			type: "b",
@@ -742,7 +743,6 @@ function create_cue(
 	}
 	return cues;
 }
-
 function insertTag(
 	_metadata: EBML.EBMLElementBuffer[],
 	tagName: string,
@@ -773,7 +773,7 @@ function insertTag(
 			_metadata.unshift(elm);
 		}
 	} else {
-		// metadata 末尾に <Cues /> を追加
+		// add <Cues /> to the end of metadata
 		// insert <Cues />
 		_metadata.push({ name: tagName, type: "m", isEnd: false });
 		for (const elm of children) {

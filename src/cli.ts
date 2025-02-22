@@ -89,7 +89,7 @@ if (com.seekable) {
 } else {
 	const decoder = new Decoder();
 	fs.createReadStream(args[0]).on("data", (buf) => {
-		// put ebml info
+		// Output EBML information
 		const ebmlElms = decoder.decode(buf.buffer); // Convert Buffer to ArrayBuffer using .buffer property
 		for (const elm of ebmlElms) {
 			// Converted forEach to for...of
