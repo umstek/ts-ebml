@@ -6,10 +6,4 @@ import * as tools from "./tools";
 
 const version = <string>require("../package.json").version;
 
-export {
-  version,
-  Decoder,
-  Encoder,
-  Reader,
-  tools
-};
+export { version, Decoder, Encoder, Reader, tools };
